@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/czQery/instagram-bot/tools"
 	"github.com/imroc/req"
 )
 
 func main() {
-	fmt.Println("[Instagram-bot][v1]")
+	fmt.Println("[Instagram-bot][v1.1]")
 	fmt.Println("[Created by czQery]")
 
 	tools.LoadConfig()
@@ -79,8 +80,20 @@ func main() {
 			if status == "200 OK" {
 				tools.Log("Removed: " + target_user["username"] + " Id: " + target_user["id"])
 			} else {
-				tools.Log(status + " Error: " + target_user["username"] + " Id: " + target_user["id"])
+				tools.Log("Waiting...")
+				for {
+					resp_4, _ := req.Post("https://www.instagram.com/web/friendships/"+target_user["id"]+"/unfollow/", header)
+					status := resp_4.Response().Status
+					if status == "200 OK" {
+						tools.Log("Started!")
+						tools.Log("Removed: " + target_user["username"] + " Id: " + target_user["id"])
+						break
+					} else {
+						time.Sleep(300 * time.Second)
+					}
+				}
 			}
+			time.Sleep(3 * time.Second)
 		}
 	}
 }
