@@ -119,6 +119,11 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 	}
 
 	for true {
+		header := req.Header{
+			"cookie":      "sessionid=" + sessionid + ";",
+			"X-CSRFToken": csrftoken,
+		}
+
 		_, followers_count := tools.GetFollowers(user["id"], sessionid, csrftoken)
 		_, following_count := tools.GetFollowing(user["id"], sessionid, csrftoken)
 		tools.Log("Followers: " + followers_count)
@@ -153,11 +158,6 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 			}
 
 			random_follower := followers[rand.Intn(len(followers))]
-
-			header := req.Header{
-				"cookie":      "sessionid=" + sessionid + ";",
-				"X-CSRFToken": csrftoken,
-			}
 
 			r1, _ := json.Marshal(random_follower["node"])
 			var target_user map[string]string
@@ -197,18 +197,28 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 					//? CHECK ID
 					if followers_user["id"] == profiles_user["id"] {
 						tools.Log("New Follower: " + followers_user["username"] + " Id: " + followers_user["id"])
-						//! REMOVE USER FROM SLICE
-						profiles[i2] = profiles[len(profiles)-1]
-						profiles = profiles[:len(profiles)-1]
+						//! UNFOLLOW
+						resp_2, _ := req.Post("https://www.instagram.com/web/friendships/"+profiles_user["id"]+"/unfollow/", header)
+						status := resp_2.Response().Status
+						if status == "200 OK" {
+							//! REMOVE USER FROM SLICE
+							profiles[i2] = profiles[len(profiles)-1]
+							profiles = profiles[:len(profiles)-1]
+						}
 					}
 					unix_time, _ := strconv.ParseInt(profiles_user["time"], 10, 64)
 					diff := time.Now().UTC().Sub(time.Unix(unix_time, 0))
 
 					//? CHECK TIME
 					if int64(diff.Hours()) >= 24 {
-						//! REMOVE USER FROM SLICE
-						profiles[i2] = profiles[len(profiles)-1]
-						profiles = profiles[:len(profiles)-1]
+						//! UNFOLLOW
+						resp_3, _ := req.Post("https://www.instagram.com/web/friendships/"+profiles_user["id"]+"/unfollow/", header)
+						status := resp_3.Response().Status
+						if status == "200 OK" {
+							//! REMOVE USER FROM SLICE
+							profiles[i2] = profiles[len(profiles)-1]
+							profiles = profiles[:len(profiles)-1]
+						}
 					}
 				}
 			}
