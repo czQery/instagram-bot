@@ -31,6 +31,7 @@ func main() {
 		tools.Log("Please select mode!")
 		tools.Log("1. Unfollow all accounts")
 		tools.Log("2. Farm followers")
+		tools.Log("3. Unfollow all temporary farming accounts")
 		//? GET USER INPUT
 		var input0 string
 		fmt.Scanln(&input0)
@@ -44,6 +45,9 @@ func main() {
 		case 2:
 			tools.Log("Selected mode: 2 (Farm followers)")
 			commands.Farm(user, sessionid, csrftoken)
+		case 3:
+			tools.Log("Selected mode: 3 (Unfollow all temporary farming accounts)")
+			commands.Farm_remove(user, sessionid, csrftoken)
 		default:
 			tools.Log("Unknown mode!")
 			os.Exit(1)
