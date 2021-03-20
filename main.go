@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	fmt.Println("[Instagram-bot][v1.2]")
+	fmt.Println("[Instagram-bot][v1.3]")
 	fmt.Println("[Created by czQery]")
 
 	tools.LoadConfig()
