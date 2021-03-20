@@ -24,3 +24,7 @@ func LoadConfig() {
 func Log(message string) {
 	fmt.Println("[" + time.Now().Format("15:04:05") + "] - " + message)
 }
+
+func Sleep(seconds time.Duration) {
+	time.Sleep(seconds * time.Second)
+}
