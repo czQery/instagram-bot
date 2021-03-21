@@ -124,11 +124,6 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 			"X-CSRFToken": csrftoken,
 		}
 
-		_, followers_count := tools.GetFollowers(user["id"], sessionid, csrftoken)
-		_, following_count := tools.GetFollowing(user["id"], sessionid, csrftoken)
-		tools.Log("Followers: " + followers_count)
-		tools.Log("Following: " + following_count)
-
 		//? LOAD DATA
 		file_1, _ := ioutil.ReadFile("data.json")
 
@@ -148,6 +143,7 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 			target := community[rand.Intn(len(community))]
 			followers, _ := tools.GetFollowers(target, sessionid, csrftoken)
 			if len(followers) < 1 {
+				tools.GetUser(sessionid, csrftoken)
 				if custom {
 					tools.Log("Bad custom id!")
 					os.Exit(1)
@@ -170,7 +166,7 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 
 				profiles = append(profiles, profiles_struct{Id: target_user["id"], Time: strconv.FormatInt(time.Now().Unix(), 10)})
 			} else {
-				tools.Log("Follow failed!")
+				tools.Log("Follow failed")
 			}
 			tools.Sleep(5)
 		}
@@ -178,7 +174,6 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 		//? SAVE DATA
 		file_2, _ := json.Marshal(profiles)
 		_ = ioutil.WriteFile("data.json", file_2, os.ModePerm)
-		tools.Log("Waiting...")
 
 		for i1 := 0; i1 < 6; i1++ {
 			followers, _ := tools.GetFollowers(user["id"], sessionid, csrftoken)
@@ -196,7 +191,6 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 
 					//? CHECK ID
 					if followers_user["id"] == profiles_user["id"] {
-						tools.Log("New Follower: " + followers_user["username"] + " Id: " + followers_user["id"])
 						//! UNFOLLOW
 						resp_2, _ := req.Post("https://www.instagram.com/web/friendships/"+profiles_user["id"]+"/unfollow/", header)
 						status := resp_2.Response().Status
@@ -204,6 +198,11 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 							//! REMOVE USER FROM SLICE
 							profiles[i2] = profiles[len(profiles)-1]
 							profiles = profiles[:len(profiles)-1]
+							tools.Log("New Follower: " + followers_user["username"] + " Id: " + followers_user["id"])
+							_, followers_count := tools.GetFollowers(user["id"], sessionid, csrftoken)
+							_, following_count := tools.GetFollowing(user["id"], sessionid, csrftoken)
+							tools.Log("Followers: " + followers_count)
+							tools.Log("Following: " + following_count)
 							break
 						}
 					}
@@ -219,6 +218,7 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 							//! REMOVE USER FROM SLICE
 							profiles[i2] = profiles[len(profiles)-1]
 							profiles = profiles[:len(profiles)-1]
+							tools.Log("Unfollowed after 24h Id: " + profiles_user["id"])
 							break
 						}
 					}
