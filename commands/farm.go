@@ -134,6 +134,10 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 		var profiles []profiles_struct
 		json.Unmarshal(file_1, &profiles)
 
+		rand.Seed(time.Now().UTC().UnixNano())
+
+		tools.Log("Starting...")
+
 		//? SELECT RANDOM PROFILE AND FOLLOW RANDOM FOLLOWER
 		for i := 0; i < 5; i++ {
 			if len(profiles) >= 100 {
@@ -177,6 +181,9 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 
 		for i1 := 0; i1 < 6; i1++ {
 			followers, _ := tools.GetFollowers(user["id"], sessionid, csrftoken)
+			if len(followers) < 1 {
+				tools.GetUser(sessionid, csrftoken)
+			}
 			for _, d1 := range followers {
 				//? GET ONE FOLLOWER
 				ma1, _ := json.Marshal(d1["node"])
