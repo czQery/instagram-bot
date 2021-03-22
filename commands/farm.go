@@ -118,11 +118,14 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 		os.Exit(1)
 	}
 
+	header := req.Header{
+		"cookie":      "sessionid=" + sessionid + ";",
+		"X-CSRFToken": csrftoken,
+	}
+	rand.Seed(time.Now().UTC().UnixNano())
+	tools.Log("Starting...")
+
 	for true {
-		header := req.Header{
-			"cookie":      "sessionid=" + sessionid + ";",
-			"X-CSRFToken": csrftoken,
-		}
 
 		//? LOAD DATA
 		file_1, _ := ioutil.ReadFile("data.json")
@@ -133,10 +136,6 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 		}
 		var profiles []profiles_struct
 		json.Unmarshal(file_1, &profiles)
-
-		rand.Seed(time.Now().UTC().UnixNano())
-
-		tools.Log("Starting...")
 
 		//? SELECT RANDOM PROFILE AND FOLLOW RANDOM FOLLOWER
 		for i := 0; i < 5; i++ {
