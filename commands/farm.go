@@ -162,12 +162,16 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 			var target_user map[string]string
 			json.Unmarshal(r1, &target_user)
 
-			resp_1, _ := req.Post("https://www.instagram.com/web/friendships/"+target_user["id"]+"/follow/", header)
-			status := resp_1.Response().Status
-			if status == "200 OK" {
-				tools.Log("Followed: " + target_user["username"] + " Id: " + target_user["id"])
+			resp_1, err1 := req.Post("https://www.instagram.com/web/friendships/"+target_user["id"]+"/follow/", header)
+			if err1 == nil {
+				status := resp_1.Response().Status
+				if status == "200 OK" {
+					tools.Log("Followed: " + target_user["username"] + " Id: " + target_user["id"])
 
-				profiles = append(profiles, profiles_struct{Id: target_user["id"], Time: strconv.FormatInt(time.Now().Unix(), 10)})
+					profiles = append(profiles, profiles_struct{Id: target_user["id"], Time: strconv.FormatInt(time.Now().Unix(), 10)})
+				} else {
+					tools.Log("Follow failed")
+				}
 			} else {
 				tools.Log("Follow failed")
 			}
@@ -198,18 +202,20 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 					//? CHECK ID
 					if followers_user["id"] == profiles_user["id"] {
 						//! UNFOLLOW
-						resp_2, _ := req.Post("https://www.instagram.com/web/friendships/"+profiles_user["id"]+"/unfollow/", header)
-						status := resp_2.Response().Status
-						if status == "200 OK" {
-							//! REMOVE USER FROM SLICE
-							profiles[i2] = profiles[len(profiles)-1]
-							profiles = profiles[:len(profiles)-1]
-							tools.Log("New Follower: " + followers_user["username"] + " Id: " + followers_user["id"])
-							_, followers_count := tools.GetFollowers(user["id"], sessionid, csrftoken)
-							_, following_count := tools.GetFollowing(user["id"], sessionid, csrftoken)
-							tools.Log("Followers: " + followers_count)
-							tools.Log("Following: " + following_count)
-							break
+						resp_2, err2 := req.Post("https://www.instagram.com/web/friendships/"+profiles_user["id"]+"/unfollow/", header)
+						if err2 == nil {
+							status := resp_2.Response().Status
+							if status == "200 OK" {
+								//! REMOVE USER FROM SLICE
+								profiles[i2] = profiles[len(profiles)-1]
+								profiles = profiles[:len(profiles)-1]
+								tools.Log("New Follower: " + followers_user["username"] + " Id: " + followers_user["id"])
+								_, followers_count := tools.GetFollowers(user["id"], sessionid, csrftoken)
+								_, following_count := tools.GetFollowing(user["id"], sessionid, csrftoken)
+								tools.Log("Followers: " + followers_count)
+								tools.Log("Following: " + following_count)
+								break
+							}
 						}
 					}
 					unix_time, _ := strconv.ParseInt(profiles_user["time"], 10, 64)
@@ -218,14 +224,16 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 					//? CHECK TIME
 					if int64(diff.Hours()) >= 24 {
 						//! UNFOLLOW
-						resp_3, _ := req.Post("https://www.instagram.com/web/friendships/"+profiles_user["id"]+"/unfollow/", header)
-						status := resp_3.Response().Status
-						if status == "200 OK" {
-							//! REMOVE USER FROM SLICE
-							profiles[i2] = profiles[len(profiles)-1]
-							profiles = profiles[:len(profiles)-1]
-							tools.Log("Unfollowed after 24h Id: " + profiles_user["id"])
-							break
+						resp_3, err3 := req.Post("https://www.instagram.com/web/friendships/"+profiles_user["id"]+"/unfollow/", header)
+						if err3 == nil {
+							status := resp_3.Response().Status
+							if status == "200 OK" {
+								//! REMOVE USER FROM SLICE
+								profiles[i2] = profiles[len(profiles)-1]
+								profiles = profiles[:len(profiles)-1]
+								tools.Log("Unfollowed after 24h Id: " + profiles_user["id"])
+								break
+							}
 						}
 					}
 				}
