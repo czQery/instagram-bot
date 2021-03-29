@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/czQery/instagram-bot/tools"
+	"github.com/gookit/color"
 	"github.com/imroc/req"
 )
 
@@ -34,7 +35,7 @@ func Farm_remove(user map[string]string, sessionid string, csrftoken string) {
 			resp_3, _ := req.Post("https://www.instagram.com/web/friendships/"+profiles_user["id"]+"/unfollow/", header)
 			status := resp_3.Response().Status
 			if status == "200 OK" {
-				tools.Log("Removed Id: " + profiles_user["id"])
+				tools.Log("Removed Id: " + color.HEX("FFAA00").Sprint(profiles_user["id"]))
 				profiles[i1] = profiles[len(profiles)-1]
 				profiles = profiles[:len(profiles)-1]
 				break
@@ -44,7 +45,7 @@ func Farm_remove(user map[string]string, sessionid string, csrftoken string) {
 					resp_4, _ := req.Post("https://www.instagram.com/web/friendships/"+profiles_user["id"]+"/unfollow/", header)
 					status := resp_4.Response().Status
 					if status == "200 OK" {
-						tools.Log("Removed: " + profiles_user["username"] + " Id: " + profiles_user["id"])
+						tools.Log("Removed Id: " + color.HEX("FFAA00").Sprint(profiles_user["id"]))
 						profiles[i1] = profiles[len(profiles)-1]
 						profiles = profiles[:len(profiles)-1]
 						break

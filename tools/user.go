@@ -3,6 +3,7 @@ package tools
 import (
 	"os"
 
+	"github.com/gookit/color"
 	"github.com/imroc/req"
 )
 
@@ -18,7 +19,7 @@ func GetUser(sessionid string, csrftoken string) map[string]string {
 	var response_1 map[string]map[string]map[string]string
 	resp_1.ToJSON(&response_1)
 	if response_1 == nil {
-		Log("Incorrect login information!")
+		Log(color.FgLightRed.Render("Incorrect login information!"))
 		os.Exit(1)
 	}
 	response_data_1 := response_1["data"]

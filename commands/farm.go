@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/czQery/instagram-bot/tools"
+	"github.com/gookit/color"
 	"github.com/imroc/req"
 )
 
@@ -35,7 +36,7 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 	var community []string
 	switch community_id, _ := strconv.Atoi(input1); community_id {
 	case 1:
-		tools.Log("Selected community: 1 (Custom)")
+		tools.Log(color.FgLightGreen.Render("Selected community: 1 (Custom)"))
 		custom = true
 		tools.Log("Please enter custom id!")
 		var input2 string
@@ -44,7 +45,7 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 		community = append(community, input2)
 
 	case 2:
-		tools.Log("Selected community: 2 (Games)")
+		tools.Log(color.FgLightGreen.Render("Selected community: 2 (Games)"))
 		community = append(community, "1192899491")  //Fortnite
 		community = append(community, "46218147")    //IGN
 		community = append(community, "2077685663")  //Ninja
@@ -53,7 +54,7 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 		community = append(community, "12130726473") //Tommy
 		community = append(community, "529464688")   //S1mple
 	case 3:
-		tools.Log("Selected community: 3 (Memes)")
+		tools.Log(color.FgLightGreen.Render("Selected community: 3 (Memes)"))
 		community = append(community, "18065136551") //Daily Dose Of Internet
 		community = append(community, "32039297384") //Phailure
 		community = append(community, "9978699610")  //Weebshit
@@ -63,7 +64,7 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 		community = append(community, "13506898")    //Pewdiepie
 		community = append(community, "10033548262") //Pewmemes
 	case 4:
-		tools.Log("Selected community: 4 (Thicc girls)")
+		tools.Log(color.FgLightGreen.Render("Selected community: 4 (Thicc girls)"))
 		community = append(community, "11389317073") //Belle.delphiny
 		community = append(community, "938811795")   //Amouranth
 		community = append(community, "336942508")   //Poki
@@ -73,14 +74,14 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 		community = append(community, "188331362")   //Evamenta
 		community = append(community, "5152138052")  //Pandorakaaki
 	case 5:
-		tools.Log("Selected community: 5 (Thicc boys)")
+		tools.Log(color.FgLightGreen.Render("Selected community: 5 (Thicc boys)"))
 		community = append(community, "1929749275") //Rice
 		community = append(community, "2278169415") //Mrbeast
 		community = append(community, "6860189")    //Justinbieber
 		community = append(community, "1414857648") //Tom Ellis
 		community = append(community, "1660092007") //Radoslav_raychev
 	case 6:
-		tools.Log("Selected community: 6 (Cars)")
+		tools.Log(color.FgLightGreen.Render("Selected community: 6 (Cars)"))
 		community = append(community, "4086860751") //Mdc.media
 		community = append(community, "2272114078") //Supercarsbuzz
 		community = append(community, "297604134")  //Tesla
@@ -89,7 +90,7 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 		community = append(community, "43109246")   //Bmw
 		community = append(community, "2465409402") //Supercar
 	case 7:
-		tools.Log("Selected community: 7 (Tech)")
+		tools.Log(color.FgLightGreen.Render("Selected community: 7 (Tech)"))
 		community = append(community, "297604134")   //Tesla
 		community = append(community, "20311520")    //SpaceX
 		community = append(community, "4236812322")  //Elon musk
@@ -98,23 +99,23 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 		community = append(community, "360157628")   //Nvidiageforce
 		community = append(community, "14673726")    //Amd
 	case 8:
-		tools.Log("Selected community: 8 (DIY)")
+		tools.Log(color.FgLightGreen.Render("Selected community: 8 (DIY)"))
 		community = append(community, "18328422") //5.min.crafts
 	case 9:
-		tools.Log("Selected community: 9 (Food)")
+		tools.Log(color.FgLightGreen.Render("Selected community: 9 (Food)"))
 		community = append(community, "1573550968")  //Chefincamicia
 		community = append(community, "214024091")   //Soniaperonac
 		community = append(community, "1584854974")  //Dabizdiverxo
 		community = append(community, "39629390339") //Ketosmart_
 		community = append(community, "175473620")   //Breakfastnbowls
 	case 10:
-		tools.Log("Selected community: 10 (Actually good photos)")
+		tools.Log(color.FgLightGreen.Render("Selected community: 10 (Actually good photos)"))
 		community = append(community, "1987493425") //Airpixels
 		community = append(community, "9868480")    //Thiswildidea
 		community = append(community, "36045182")   //Chrisburkard
 		community = append(community, "174143945")  //Hannes_becker
 	default:
-		tools.Log("Unknown community!")
+		tools.Log(color.FgLightRed.Render("Unknown community!"))
 		os.Exit(1)
 	}
 
@@ -123,7 +124,7 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 		"X-CSRFToken": csrftoken,
 	}
 	rand.Seed(time.Now().UTC().UnixNano())
-	tools.Log("Starting...")
+	tools.Log(color.FgLightGreen.Render("Starting..."))
 
 	for true {
 
@@ -148,10 +149,10 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 			if len(followers) < 1 {
 				tools.GetUser(sessionid, csrftoken)
 				if custom {
-					tools.Log("Bad custom id!")
+					tools.Log(color.FgLightRed.Render("Bad custom id!"))
 					os.Exit(1)
 				} else {
-					tools.Log("Bad profile id in community preset: " + input1)
+					tools.Log(color.FgLightRed.Render("Bad profile id in community preset: " + input1))
 					os.Exit(1)
 				}
 			}
@@ -166,14 +167,14 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 			if err1 == nil {
 				status := resp_1.Response().Status
 				if status == "200 OK" {
-					tools.Log("Followed: " + target_user["username"] + " Id: " + target_user["id"])
+					tools.Log("Followed: " + color.HEX("FFAA00").Sprint(target_user["username"]) + " Id: " + color.HEX("FFAA00").Sprint(target_user["id"]))
 
 					profiles = append(profiles, profiles_struct{Id: target_user["id"], Time: strconv.FormatInt(time.Now().Unix(), 10)})
 				} else {
-					tools.Log("Follow failed")
+					tools.Log(color.FgLightRed.Render("Follow failed"))
 				}
 			} else {
-				tools.Log("Follow failed")
+				tools.Log(color.FgLightRed.Render("Follow failed"))
 			}
 			tools.Sleep(5)
 		}
@@ -209,11 +210,11 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 								//! REMOVE USER FROM SLICE
 								profiles[i2] = profiles[len(profiles)-1]
 								profiles = profiles[:len(profiles)-1]
-								tools.Log("New Follower: " + followers_user["username"] + " Id: " + followers_user["id"])
+								tools.Log(color.FgLightGreen.Render("New Follower: ") + color.HEX("FFAA00").Sprint(followers_user["username"]) + color.FgLightGreen.Render(" Id: ") + color.HEX("FFAA00").Sprint(followers_user["id"]))
 								_, followers_count := tools.GetFollowers(user["id"], sessionid, csrftoken)
 								_, following_count := tools.GetFollowing(user["id"], sessionid, csrftoken)
-								tools.Log("Followers: " + followers_count)
-								tools.Log("Following: " + following_count)
+								tools.Log("Followers: " + color.HEX("FFAA00").Sprint(followers_count))
+								tools.Log("Following: " + color.HEX("FFAA00").Sprint(following_count))
 								break
 							}
 						}
@@ -231,7 +232,7 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 								//! REMOVE USER FROM SLICE
 								profiles[i2] = profiles[len(profiles)-1]
 								profiles = profiles[:len(profiles)-1]
-								tools.Log("Unfollowed after 24h Id: " + profiles_user["id"])
+								tools.Log("Unfollowed after 24h Id: " + color.HEX("FFAA00").Sprint(profiles_user["id"]))
 								break
 							}
 						}

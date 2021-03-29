@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 
 	"github.com/czQery/instagram-bot/tools"
+	"github.com/gookit/color"
 	"github.com/imroc/req"
 )
 
 func Unfollow(user map[string]string, sessionid string, csrftoken string) {
 	target_list, count := tools.GetFollowing(user["id"], sessionid, csrftoken)
 
-	tools.Log("Following: " + count)
+	tools.Log("Following: " + color.HEX("FFAA00").Sprint(count))
 
 	header := req.Header{
 		"cookie":      "sessionid=" + sessionid + ";",
@@ -24,14 +25,14 @@ func Unfollow(user map[string]string, sessionid string, csrftoken string) {
 		resp_3, _ := req.Post("https://www.instagram.com/web/friendships/"+target_user["id"]+"/unfollow/", header)
 		status := resp_3.Response().Status
 		if status == "200 OK" {
-			tools.Log("Removed: " + target_user["username"] + " Id: " + target_user["id"])
+			tools.Log("Removed: " + color.HEX("FFAA00").Sprint(target_user["username"]) + " Id: " + color.HEX("FFAA00").Sprint(target_user["id"]))
 		} else {
 			tools.Log("Waiting...")
 			for {
 				resp_4, _ := req.Post("https://www.instagram.com/web/friendships/"+target_user["id"]+"/unfollow/", header)
 				status := resp_4.Response().Status
 				if status == "200 OK" {
-					tools.Log("Removed: " + target_user["username"] + " Id: " + target_user["id"])
+					tools.Log("Removed: " + color.HEX("FFAA00").Sprint(target_user["username"]) + " Id: " + color.HEX("FFAA00").Sprint(target_user["id"]))
 					break
 				}
 				tools.Sleep(300)
