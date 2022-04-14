@@ -12,10 +12,11 @@ import (
 	"github.com/czQery/instagram-bot/tools"
 	"github.com/gookit/color"
 	"github.com/imroc/req"
+	"github.com/tidwall/gjson"
 )
 
-func Farm(user map[string]string, sessionid string, csrftoken string) {
-	//? PRINT OPTIONS
+func Farm() {
+	// PRINT OPTIONS
 	tools.Log("Please select which community you are targeting!")
 	tools.Log("1. Custom")
 	tools.Log("2. Games")
@@ -27,7 +28,7 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 	tools.Log("8. DIY")
 	tools.Log("9. Food")
 	tools.Log("10. Actually good photos")
-	//? GET USER INPUT
+	// GET USER INPUT
 	var input1 string
 	fmt.Scanln(&input1)
 	fmt.Println("----------")
@@ -119,35 +120,59 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 		os.Exit(1)
 	}
 
-	header := req.Header{
-		"cookie":      "sessionid=" + sessionid + ";",
-		"X-CSRFToken": csrftoken,
-	}
 	rand.Seed(time.Now().UTC().UnixNano())
 	tools.Log(color.FgLightGreen.Render("Starting..."))
 
+	type users_struct struct {
+		Id   string `json:"id"`
+		Time int64  `json:"time"`
+	}
+
+	var (
+		resp      *req.Resp
+		err       error
+		file_load []byte
+		file_save []byte
+		// Saved users in data.json
+		users          []users_struct
+		users_count    string
+		users_user     users_struct
+		users_user_num int
+		// Target profile for grabbing users
+		target_profile          string
+		target_followers        []gjson.Result
+		target_user             gjson.Result
+		target_user_id          string
+		target_user_username    string
+		i1                      int
+		d1                      gjson.Result
+		followers               []gjson.Result
+		followers_user          gjson.Result
+		followers_user_id       string
+		followers_user_username string
+		followers_count         string
+	)
+
 	for true {
 
-		//? LOAD DATA
-		file_1, _ := ioutil.ReadFile("data.json")
+		// Load data
+		file_load, _ = ioutil.ReadFile("data.json")
+		json.Unmarshal(file_load, &users)
 
-		type profiles_struct struct {
-			Id   string `json:"id"`
-			Time string `json:"time"`
-		}
-		var profiles []profiles_struct
-		json.Unmarshal(file_1, &profiles)
+		// Follow random 5 users from random profile
+		for i1 = 0; i1 < 5; i1++ {
 
-		//? SELECT RANDOM PROFILE AND FOLLOW RANDOM FOLLOWER
-		for i := 0; i < 5; i++ {
-			if len(profiles) >= 100 {
+			// Check if you are following less than 100 users
+			if len(users) >= 100 {
 				break
 			}
 
-			target := community[rand.Intn(len(community))]
-			followers, _ := tools.GetFollowers(target, sessionid, csrftoken)
-			if len(followers) < 1 {
-				tools.GetUser(sessionid, csrftoken)
+			// Select random profile
+			target_profile = community[rand.Intn(len(community))]
+			target_followers, _ = tools.GetFollowers(target_profile)
+
+			// Check if you have custom list of profiles
+			if len(target_followers) < 1 {
 				if custom {
 					tools.Log(color.FgLightRed.Render("Bad custom id!"))
 					os.Exit(1)
@@ -157,19 +182,19 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 				}
 			}
 
-			random_follower := followers[rand.Intn(len(followers))]
+			// Declare target user
+			target_user = target_followers[rand.Intn(len(target_followers))].Get("node")
+			target_user_id = target_user.Get("id").Str
+			target_user_username = target_user.Get("username").Str
 
-			r1, _ := json.Marshal(random_follower["node"])
-			var target_user map[string]string
-			json.Unmarshal(r1, &target_user)
+			// Send POST follow request
+			resp, err = req.Post("https://www.instagram.com/web/friendships/"+target_user.Get("id").Str+"/follow/", tools.Header)
+			if err == nil {
+				if resp.Response().StatusCode == 200 {
+					tools.Log("Followed: " + color.HEX("FFAA00").Sprint(target_user_username) + " Id: " + color.HEX("FFAA00").Sprint(target_user_id))
 
-			resp_1, err1 := req.Post("https://www.instagram.com/web/friendships/"+target_user["id"]+"/follow/", header)
-			if err1 == nil {
-				status := resp_1.Response().Status
-				if status == "200 OK" {
-					tools.Log("Followed: " + color.HEX("FFAA00").Sprint(target_user["username"]) + " Id: " + color.HEX("FFAA00").Sprint(target_user["id"]))
-
-					profiles = append(profiles, profiles_struct{Id: target_user["id"], Time: strconv.FormatInt(time.Now().Unix(), 10)})
+					// Add user to list of followed users
+					users = append(users, users_struct{Id: target_user_id, Time: time.Now().Unix()})
 				} else {
 					tools.Log(color.FgLightRed.Render("Follow failed"))
 				}
@@ -179,69 +204,74 @@ func Farm(user map[string]string, sessionid string, csrftoken string) {
 			tools.Sleep(5)
 		}
 
-		//? SAVE DATA
-		file_2, _ := json.Marshal(profiles)
-		_ = ioutil.WriteFile("data.json", file_2, os.ModePerm)
+		// Save data
+		file_save, _ = json.Marshal(users)
+		ioutil.WriteFile("data.json", file_save, os.ModePerm)
 
-		for i1 := 0; i1 < 6; i1++ {
-			followers, _ := tools.GetFollowers(user["id"], sessionid, csrftoken)
+		// Check 6 users if they have already started following me back
+		for i1 = 0; i1 < 6; i1++ {
+
+			// Get my followers
+			followers, _ = tools.GetFollowers(tools.User.Get("id").Str)
 			if len(followers) < 1 {
-				tools.GetUser(sessionid, csrftoken)
+				tools.GetUser()
 			}
-			for _, d1 := range followers {
-				//? GET ONE FOLLOWER
-				ma1, _ := json.Marshal(d1["node"])
-				var followers_user map[string]string
-				json.Unmarshal(ma1, &followers_user)
 
-				for i2, d2 := range profiles {
-					//? GET ONE FOLLOWING
-					ma2, _ := json.Marshal(d2)
-					var profiles_user map[string]string
-					json.Unmarshal(ma2, &profiles_user)
+			// Loop through my followers
+			for _, d1 = range followers {
+				// GET ONE FOLLOWER
+				followers_user = d1.Get("node")
 
-					//? CHECK ID
-					if followers_user["id"] == profiles_user["id"] {
-						//! UNFOLLOW
-						resp_2, err2 := req.Post("https://www.instagram.com/web/friendships/"+profiles_user["id"]+"/unfollow/", header)
-						if err2 == nil {
-							status := resp_2.Response().Status
-							if status == "200 OK" {
-								//! REMOVE USER FROM SLICE
-								profiles[i2] = profiles[len(profiles)-1]
-								profiles = profiles[:len(profiles)-1]
-								tools.Log(color.FgLightGreen.Render("New Follower: ") + color.HEX("FFAA00").Sprint(followers_user["username"]) + color.FgLightGreen.Render(" Id: ") + color.HEX("FFAA00").Sprint(followers_user["id"]))
-								_, followers_count := tools.GetFollowers(user["id"], sessionid, csrftoken)
-								_, following_count := tools.GetFollowing(user["id"], sessionid, csrftoken)
+				// Loop through followed users
+				for users_user_num, users_user = range users {
+
+					// Declare follower
+					followers_user_id = followers_user.Get("id").Str
+					followers_user_username = followers_user.Get("username").Str
+
+					// Check id of follower and following user
+					if followers_user_id == users_user.Id {
+
+						// Send POST unfollow request
+						resp, err = req.Post("https://www.instagram.com/web/friendships/"+users_user.Id+"/unfollow/", tools.Header)
+						if err == nil {
+							if resp.Response().StatusCode == 200 {
+
+								// Remove user from followed users list
+								users[users_user_num] = users[len(users)-1]
+								users = users[:len(users)-1]
+								tools.Log(color.FgLightGreen.Render("New Follower: ") + color.HEX("FFAA00").Sprint(followers_user_username) + color.FgLightGreen.Render(" Id: ") + color.HEX("FFAA00").Sprint(followers_user_id))
+								_, followers_count = tools.GetFollowers(tools.User.Get("id").Str)
+								_, users_count = tools.GetFollowing(tools.User.Get("id").Str)
 								tools.Log("Followers: " + color.HEX("FFAA00").Sprint(followers_count))
-								tools.Log("Following: " + color.HEX("FFAA00").Sprint(following_count))
+								tools.Log("Following: " + color.HEX("FFAA00").Sprint(users_count))
 								break
 							}
 						}
 					}
-					unix_time, _ := strconv.ParseInt(profiles_user["time"], 10, 64)
-					diff := time.Now().UTC().Sub(time.Unix(unix_time, 0))
 
-					//? CHECK TIME
-					if int64(diff.Hours()) >= 24 {
-						//! UNFOLLOW
-						resp_3, err3 := req.Post("https://www.instagram.com/web/friendships/"+profiles_user["id"]+"/unfollow/", header)
-						if err3 == nil {
-							status := resp_3.Response().Status
-							if status == "200 OK" {
-								//! REMOVE USER FROM SLICE
-								profiles[i2] = profiles[len(profiles)-1]
-								profiles = profiles[:len(profiles)-1]
-								tools.Log("Unfollowed after 24h Id: " + color.HEX("FFAA00").Sprint(profiles_user["id"]))
+					// Check users followed for more than 24 hours
+					if time.Now().UTC().Sub(time.Unix(users_user.Time, 0)).Hours() >= 24 {
+
+						// Send POST unfollow request
+						resp, err = req.Post("https://www.instagram.com/web/friendships/"+users_user.Id+"/unfollow/", tools.Header)
+						if err == nil {
+							if resp.Response().StatusCode == 200 {
+
+								// Remove user from followed users list
+								users[users_user_num] = users[len(users)-1]
+								users = users[:len(users)-1]
+								tools.Log("Unfollowed after 24h Id: " + color.HEX("FFAA00").Sprint(users_user.Id))
 								break
 							}
 						}
 					}
 				}
 			}
-			//? SAVE DATA
-			file_3, _ := json.Marshal(profiles)
-			_ = ioutil.WriteFile("data.json", file_3, os.ModePerm)
+
+			// Save data
+			file_save, _ = json.Marshal(users)
+			_ = ioutil.WriteFile("data.json", file_save, os.ModePerm)
 			tools.Sleep(300)
 		}
 	}

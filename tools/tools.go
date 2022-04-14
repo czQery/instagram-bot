@@ -8,9 +8,15 @@ import (
 	"time"
 
 	"github.com/gookit/color"
+	"github.com/imroc/req"
+	"github.com/tidwall/gjson"
 )
 
 var Config map[string]string
+
+var User gjson.Result
+
+var Header req.Header
 
 func LoadConfig() {
 	config_file, err := ioutil.ReadFile("config.json")
@@ -20,6 +26,11 @@ func LoadConfig() {
 	} else {
 		json.Unmarshal(config_file, &Config)
 		Log(color.FgLightGreen.Render("Config loaded!"))
+		Header = req.Header{
+			"cookie":      "sessionid=" + Config["sessionid"] + ";csrftoken=" + Config["csrftoken"] + ";",
+			"user-agent":  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36",
+			"x-csrftoken": Config["csrftoken"],
+		}
 	}
 }
 

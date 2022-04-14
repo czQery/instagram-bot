@@ -5,24 +5,24 @@ import (
 
 	"github.com/gookit/color"
 	"github.com/imroc/req"
+	"github.com/tidwall/gjson"
 )
 
-func GetUser(sessionid string, csrftoken string) map[string]string {
-	header := req.Header{
-		"cookie":      "sessionid=" + sessionid + ";",
-		"X-CSRFToken": csrftoken,
-	}
+func GetUser() {
 	query := req.QueryParam{
 		"query_hash": "b1245d9d251dff47d91080fbdd6b274a",
 	}
-	resp_1, _ := req.Get("https://www.instagram.com/graphql/query/", header, query)
-	var response_1 map[string]map[string]map[string]string
-	resp_1.ToJSON(&response_1)
-	if response_1 == nil {
+	resp, err := req.Get("https://www.instagram.com/graphql/query/", Header, query)
+	if err != nil || resp.Response().StatusCode != 200 {
+		Log(color.FgLightRed.Render("Login request failed!"))
+		os.Exit(1)
+	}
+
+	data := gjson.Parse(resp.String())
+	if data.Get("status").Str != "ok" || data.Get("data.user.id").Str == "" {
 		Log(color.FgLightRed.Render("Incorrect login information!"))
 		os.Exit(1)
 	}
-	response_data_1 := response_1["data"]
-	user := response_data_1["user"]
-	return user
+
+	User = data.Get("data.user")
 }

@@ -10,44 +10,44 @@ import (
 	"github.com/imroc/req"
 )
 
-func Farm_remove(user map[string]string, sessionid string, csrftoken string) {
-	header := req.Header{
-		"cookie":      "sessionid=" + sessionid + ";",
-		"X-CSRFToken": csrftoken,
-	}
-
-	//? LOAD DATA
-	file_1, _ := ioutil.ReadFile("data.json")
-	type profiles_struct struct {
+func Farm_remove() {
+	// Load data
+	file_load, _ := ioutil.ReadFile("data.json")
+	type users_struct struct {
 		Id   string `json:"id"`
 		Time string `json:"time"`
 	}
-	var profiles []profiles_struct
-	json.Unmarshal(file_1, &profiles)
+	var users []users_struct
+	json.Unmarshal(file_load, &users)
 
-	for range profiles {
-		for i1, d1 := range profiles {
-			//? GET ONE FOLLOWING
-			ma1, _ := json.Marshal(d1)
-			var profiles_user map[string]string
-			json.Unmarshal(ma1, &profiles_user)
+	var (
+		users_user     users_struct
+		users_user_num int
+		resp           *req.Resp
+	)
 
-			resp_3, _ := req.Post("https://www.instagram.com/web/friendships/"+profiles_user["id"]+"/unfollow/", header)
-			status := resp_3.Response().Status
-			if status == "200 OK" {
-				tools.Log("Removed Id: " + color.HEX("FFAA00").Sprint(profiles_user["id"]))
-				profiles[i1] = profiles[len(profiles)-1]
-				profiles = profiles[:len(profiles)-1]
+	for range users {
+		for users_user_num, users_user = range users {
+			// Send POST unfollow request
+			resp, _ = req.Post("https://www.instagram.com/web/friendships/"+users_user.Id+"/unfollow/", tools.Header)
+			if resp.Response().StatusCode == 200 {
+				tools.Log("Removed Id: " + color.HEX("FFAA00").Sprint(users_user.Id))
+
+				// Remove user from followed users list
+				users[users_user_num] = users[len(users)-1]
+				users = users[:len(users)-1]
 				break
 			} else {
 				tools.Log("Waiting...")
 				for {
-					resp_4, _ := req.Post("https://www.instagram.com/web/friendships/"+profiles_user["id"]+"/unfollow/", header)
-					status := resp_4.Response().Status
-					if status == "200 OK" {
-						tools.Log("Removed Id: " + color.HEX("FFAA00").Sprint(profiles_user["id"]))
-						profiles[i1] = profiles[len(profiles)-1]
-						profiles = profiles[:len(profiles)-1]
+					// Try again to send POST unfollow request
+					resp, _ = req.Post("https://www.instagram.com/web/friendships/"+users_user.Id+"/unfollow/", tools.Header)
+					if resp.Response().StatusCode == 200 {
+						tools.Log("Removed Id: " + color.HEX("FFAA00").Sprint(users_user.Id))
+
+						// Remove user from followed users list
+						users[users_user_num] = users[len(users)-1]
+						users = users[:len(users)-1]
 						break
 					}
 					tools.Sleep(300)
@@ -57,8 +57,9 @@ func Farm_remove(user map[string]string, sessionid string, csrftoken string) {
 		}
 		tools.Sleep(3)
 	}
-	file_2, _ := json.Marshal(profiles)
-	_ = ioutil.WriteFile("data.json", file_2, os.ModePerm)
+
+	file_save, _ := json.Marshal(users)
+	_ = ioutil.WriteFile("data.json", file_save, os.ModePerm)
 	tools.Log("Done!")
 	os.Exit(1)
 }

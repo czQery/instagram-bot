@@ -1,38 +1,43 @@
 package commands
 
 import (
-	"encoding/json"
+	"fmt"
 
 	"github.com/czQery/instagram-bot/tools"
 	"github.com/gookit/color"
 	"github.com/imroc/req"
+	"github.com/tidwall/gjson"
 )
 
-func Unfollow(user map[string]string, sessionid string, csrftoken string) {
-	target_list, count := tools.GetFollowing(user["id"], sessionid, csrftoken)
+func Unfollow() {
+	target_list, count := tools.GetFollowing(tools.User.Get("id").Str)
 
 	tools.Log("Following: " + color.HEX("FFAA00").Sprint(count))
 
-	header := req.Header{
-		"cookie":      "sessionid=" + sessionid + ";",
-		"X-CSRFToken": csrftoken,
-	}
+	var (
+		resp                 *req.Resp
+		target_user          gjson.Result
+		target_user_id       string
+		target_user_username string
+	)
 
-	for _, dd := range target_list {
-		uu, _ := json.Marshal(dd["node"])
-		var target_user map[string]string
-		json.Unmarshal(uu, &target_user)
-		resp_3, _ := req.Post("https://www.instagram.com/web/friendships/"+target_user["id"]+"/unfollow/", header)
-		status := resp_3.Response().Status
-		if status == "200 OK" {
-			tools.Log("Removed: " + color.HEX("FFAA00").Sprint(target_user["username"]) + " Id: " + color.HEX("FFAA00").Sprint(target_user["id"]))
+	// Loop through following users
+	for _, target_user = range target_list {
+		target_user_id = target_user.Get("node.id").Str
+		target_user_username = target_user.Get("node.username").Str
+
+		// Send POST unfollow request
+		resp, _ = req.Post("https://www.instagram.com/web/friendships/"+target_user_id+"/unfollow/", tools.Header)
+		fmt.Println(resp)
+		if resp.Response().StatusCode == 200 {
+			tools.Log("Removed: " + color.HEX("FFAA00").Sprint(target_user_username) + " Id: " + color.HEX("FFAA00").Sprint(target_user_id))
 		} else {
 			tools.Log("Waiting...")
 			for {
-				resp_4, _ := req.Post("https://www.instagram.com/web/friendships/"+target_user["id"]+"/unfollow/", header)
-				status := resp_4.Response().Status
-				if status == "200 OK" {
-					tools.Log("Removed: " + color.HEX("FFAA00").Sprint(target_user["username"]) + " Id: " + color.HEX("FFAA00").Sprint(target_user["id"]))
+				// Try again to send POST unfollow request
+				resp, _ = req.Post("https://www.instagram.com/web/friendships/"+target_user_id+"/unfollow/", tools.Header)
+				if resp.Response().StatusCode == 200 {
+					tools.Log("Removed: " + color.HEX("FFAA00").Sprint(target_user_username) + " Id: " + color.HEX("FFAA00").Sprint(target_user_id))
 					break
 				}
 				tools.Sleep(300)
